@@ -28,7 +28,7 @@ The airing suggestions are: green (no need to air), red (should be aired) and or
 For the summer mode, blue shows that rooms can/should be aired to cool down, orange marks that it's already cooler inside.
 The thresholds and colours can be personalized by changing the code.<br>
 
-For use on the Raspberry Pi with touch display, I installed the keyboard "onboard" that pops up very time the cursor is set in a window where you can type (e.g. notepad, terminal, ...)<br>
+For use on the Raspberry Pi with touch display, I installed the keyboard "onboard" that pops up every time the cursor is set in a window where you can type (e.g. notepad, terminal, ...)<br>
 (More info here: https://www.industrialshields.com/blog/raspberry-pi-for-industry-26/touch-screen-configuration-kiosk-mode-virtual-keyboard-setup-249 )<br>
 
 With the help of a shell script and a desktop file, the program can be started directly by double-clicking on a desktop icon.<br>
