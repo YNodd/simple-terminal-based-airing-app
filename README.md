@@ -37,17 +37,11 @@ Please consider:
 - a sensor outside is mandatory for the app to work!
 - ensure that the IP-addresses (of the sensors and the computer/Raspberry Pi) are assigned permanently in the network
 
-## What worked for me:<br>
-- create a **virtual environment**:<br>
-open the terminal and type:<br>
-\$ python3 -m venv path/to/venv (e.g. python3 -m venv /home/ynodd/airingapp)<br>
-- install the **sty module** in the virtual environment by typing in the terminal: <br>
-\$ pathtovenv/bin/pip install package_name (e.g. /home/ynodd/airingapp/bin/pip install sty)<br>
+## What worked for me:
 - make a **shell script** to start the python program (this is a text file which ends on .sh and which contains the code that normally would be typed in the terminal):<br>
-it contains the headline for the shell script, activates the venv by typing (source path_to_your_venv/bin/activate) and runs the program (python3 path_to_your_venv/name_of_your_program.py)<br>
+it contains the headline for the shell script, goes to the directory where the program file is and runs the program (python3 path_to_the_file/name_of_the_program.py)<br>
 for example in my case, the shell script contains:<br>
 \#! /usr/bin/bash<br>
-source /home/ynodd/airingapp/bin/activate<br>
 cd /home/ynodd/airingapp<br>
 python3 main.py<br>
 - make a **desktop** shortcut to be able to run the airing code with **double-click** on the desktop **icon**:<br>
@@ -61,6 +55,7 @@ Terminal=true<br>
 Type=Application<br>
 
 (Take care that the .desktop and .sh file have the right **permissions** to run.)
+
 
 
 
