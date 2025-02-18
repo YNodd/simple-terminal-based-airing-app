@@ -19,7 +19,6 @@ The sensors are self-build and programmed by a friend.
 Raspberry Pi 4 with Debian GNU/Linux 11 (bullseye)<br>
 4.3" touchscreen (DSI)<br>
 Python version 3.11<br>
-module sty for colouring the output
 
 ## How to use it
 The app runs in the terminal (or in an IDE). It's used by typing one of the letters mentioned by the program and then pressing enter.<br>
