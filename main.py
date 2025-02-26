@@ -11,7 +11,7 @@ import logging
 from datetime import datetime
 
 
-versionnr = "0.6"
+versionnr = "0.7"
 
 roomlist = [["office", "192.168.178.35"], ["bathroom", "192.168.178.33"], ["living room", "192.168.178.32"], ["portable 36", "192.168.178.36"]]  # nested list in the format [[roomname, ip-address]]
 outsidesensor = ["outside", "192.168.178.31"]
@@ -147,13 +147,13 @@ def process_sensordata(sensorlist, settingsdict):
 
     logging.debug(f"sensordata: {datadict}\nerrordata: {errorlist}")
 
-    if len(datadict) == 0:
-        errormessage = "Keng Werter vun Sensoren do, keng Angab méiglech!" if displaylanguage == "lu" else "No sensor data available, evaluation not possible!"
-        errorlist.append(errormessage)  # (colour this message red?)
-
     if len(outsidedict) == 0:
         errormessageoutside = "Keng Werter vum Bausse-Sensor do - Keng Vergläicher méiglech!" if displaylanguage == "lu" else "No data available from outside-sensor, comparison not possible"
         errorlist.append(errormessageoutside)  # (colour this message red?)
+
+    elif len(datadict) == 0:
+        errormessage = "Keng Werter vun Sensoren do, keng Angab méiglech!" if displaylanguage == "lu" else "No sensor data available, evaluation not possible!"
+        errorlist.append(errormessage)  # (colour this message red?)
 
     logging.debug(f"resultsdict (datadict): {datadict}")
     logging.debug(f"errorlist: {errorlist}")
