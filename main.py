@@ -10,10 +10,12 @@ import socket
 import logging
 from datetime import datetime
 
+import traceback
 
-versionnr = "0.7"
 
-roomlist = [["office", "192.168.178.35"], ["bathroom", "192.168.178.33"], ["living room", "192.168.178.32"], ["portable 36", "192.168.178.36"]]  # nested list in the format [[roomname, ip-address]]
+versionnr = "0.8"
+
+roomlist = [["office", "192.168.178.35"], ["bathroom", "192.168.178.33"], ["living room", "192.168.178.32"], ["portable 36", "192.168.178.36"], ["feather 34", "192.168.178.34"]]  #  # nested list in the format [[roomname, ip-address]]
 outsidesensor = ["outside", "192.168.178.31"]
 settings = {"portnr": 23,
             "displaylanguage": "lu", # "en" for english (possible are "en" and "lu")
@@ -50,7 +52,8 @@ def contact_sensor(ip_address, settingsdict):
         return "Verbindungsproblem" if settingsdict["displaylanguage"] == "lu" else "communication problem"
     except:  # for the case there were another error than OSError
         #logging.exception("allgemengen Problem!")
-        return "Verbindungsproblem - allg. except agespr.!!"
+        errorname = traceback.format_exc().split("\n")[-2]  # second last line because the last is an empty line
+        return f"Verbindungsproblem - allg. except agespr.!! Fehler: {errorname}"
 
     if socket_on == True:  # checks if the socket exists/was created
         s.send("temp.".encode())
@@ -60,7 +63,8 @@ def contact_sensor(ip_address, settingsdict):
         except (TimeoutError, socket.timeout):
             return "Timeout"
         except:  # for the case there were another error than TimeoutError
-            return "allgem. except agesprongen bei Message-Auswertung!!"
+            errordescription = traceback.format_exc().split("\n")[-2]  # second last line because the last is an empty line
+            return f"allgem. except agesprongen bei der Réckmeldung!! - Fehler as: {errordescription}"
         finally: # close the socket (this block runs even if there is a return in the except-blocks above)
             s.close()
 
@@ -126,18 +130,19 @@ def process_sensordata(sensorlist, settingsdict):
 
                 # EVALUATE SENSOR DATA and write the evaluation results to the dictionary (calculate absolute humidity
                 #   for the different places/sensors and decide whether it needs airing or not):
-                if hum >= settingsdict["hum_threshold"]:
-                    if abshumdiff > 0 and (abshumdiff > (abshum * mindiff)):
+                if abshumdiff > 0 and (abshumdiff > (abshum * mindiff)):
+                    if hum >= settingsdict["hum_threshold"]:
                         need_to_air = "leften"
                     else:
-                        need_to_air = "bausse mei fiicht"
+                        need_to_air = "brauch net leften"
                 else:
-                    need_to_air = "brauch net leften"
+                    need_to_air = "bausse mei fiicht"
                 datadict[singleroomname]["hum_ok"] = hum <= 60
                 datadict[singleroomname]["need_to_air"] = need_to_air
                 datadict[singleroomname]["cooler_outside"] = tempdiff > 0 and (tempdiff > temp * mindiff)
                 datadict[singleroomname]["abshumdiff"] = abshumdiff
                 datadict[singleroomname]["tempdiff"] = tempdiff
+
 
             else:  # if sensor data is not in the right format / it returns an error message
                 if displaylanguage == "lu":
@@ -180,7 +185,6 @@ def create_output(sensorlist, settingsdict, summer = False):
     summeroutputstrings = []
     morehumidoutside = None
 
-    # todo:
     # colours for colouring the output, using ANSI Escape Sequences, see: https://stackabuse.com/how-to-print-colored-text-in-python/
     pinkcolour = "\033[38;5;217m"
     redcolour = "\033[38;5;196m"
@@ -190,7 +194,6 @@ def create_output(sensorlist, settingsdict, summer = False):
     reseteffect = "\033[0;0m"
 
     if len(errorlist) != 0:
-        #print(fg(217) + "(" + currenttime + ")" + fg.rs)  # todo
         print(pinkcolour + "(" + currenttime + ")" + reseteffect)
         for singleproblem in errorlist:
             print(pinkcolour + singleproblem + reseteffect)  # 217 is pale pink
@@ -205,29 +208,21 @@ def create_output(sensorlist, settingsdict, summer = False):
 
             # colour the room name and instruction:
             if datadict[singleroom]["need_to_air"] == "leften":  # (need to air)
-                #roomname = fg.li_red + roomname + fg.rs  # red # todo
                 roomname = redcolour + roomname + reseteffect
                 # choosing the language for the output word:
-                #lefterei = fg.li_red + "leften" + fg.rs if displaylanguage == "lu" else fg.li_red + "ventilate" + fg.rs  # todo
                 lefterei = redcolour + "leften" + reseteffect if displaylanguage == "lu" else redcolour + "ventilate" + reseteffect
             elif datadict[singleroom]["need_to_air"] == "brauch net leften":  # (no need to air)
-                #roomname = fg.li_green + roomname + fg.rs # todo
                 roomname = greencolour + roomname + reseteffect
-                #lefterei = fg.li_green + "brauch net leften" + fg.rs if displaylanguage == "lu" else fg.li_green + "no need to air" + fg.rs  # todo
                 lefterei = greencolour + "brauch net leften" + reseteffect if displaylanguage == "lu" else greencolour + "no need to air" + reseteffect
             elif datadict[singleroom]["need_to_air"] == "bausse mei fiicht":  # (more humidity outside)
-                #roomname = fg(208) + roomname + fg.rs  # orange  # todo
-                #lefterei = fg(208) + "bausse méi fiicht! *" + fg.rs if displaylanguage == "lu" else fg(208) + "more humid outside!*" + fg.rs # todo
                 roomname = orangecolour + roomname + reseteffect
                 lefterei = orangecolour + "bausse méi fiicht! *" + reseteffect if displaylanguage == "lu" else orangecolour + "more humid outside!*" + reseteffect
                 morehumidoutside = True
 
             # colour the relative humidity:
             if datadict[singleroom]["hum_ok"] == True:
-                #relhum = fg.li_green + str(round(datadict[singleroom]["hum"], 1)) + " %" + fg.rs  # todo
                 relhum = greencolour + str(round(datadict[singleroom]["hum"], 1)) + " %" + reseteffect
             else:
-                #relhum = fg.li_red + str(round(datadict[singleroom]["hum"], 1)) + " %" + fg.rs # todo
                 relhum = redcolour + str(round(datadict[singleroom]["hum"], 1)) + " %" + reseteffect
 
             if displaylanguage == "lu":
@@ -238,13 +233,9 @@ def create_output(sensorlist, settingsdict, summer = False):
             if summer == True:
                 # todo: also include a minimum (temperature) difference in the summer mode?
                 if datadict[singleroom]['cooler_outside'] == True:  # (should air)
-                    #roomname = fg.li_blue + singleroom + fg.rs  # todo
-                    #lefterei = fg.li_blue + "leften" + fg.rs if displaylanguage == "lu" else fg.li_blue + "ventilate" + fg.rs  # todo
                     roomname = bluecolour + singleroom + reseteffect
                     lefterei = bluecolour + "leften" + reseteffect if displaylanguage == "lu" else bluecolour + "ventilate" + reseteffect
                 else:  # (outside warmer)
-                    #roomname = fg(208) + singleroom + fg.rs  # orange  # todo
-                    #lefterei = fg(208) + "bausse méi warm" + fg.rs  if displaylanguage == "lu" else "warmer outside" # todo
                     roomname = orangecolour + singleroom + reseteffect
                     lefterei = orangecolour + "bausse méi warm" + reseteffect  if displaylanguage == "lu" else orangecolour + "warmer outside" + reseteffect
                 if displaylanguage == "lu":
@@ -255,11 +246,9 @@ def create_output(sensorlist, settingsdict, summer = False):
                 #logging.debug(summerstr)
 
         if displaylanguage == "lu":
-            #print("\n" + ef.u + "FIICHTEGKEET" + ef.rs + " (" + currenttime +")")  # (humidity), underlined  # TODO
             print("\n" + "\033[4m" + "FIICHTEGKEET" + reseteffect + " (" + currenttime +")")  # (humidity), underlined
             print(f"outside: temp: {round(outsidedict['temp'], 1)} °C, relhum: {round(outsidedict['hum'], 1)} %, abshum: {outsidedict['abshum']} g/m3")
         else: # english
-            #print("\n" + ef.u + "HUMIDITY" + ef.rs + " (" + currenttime +")")  # todo
             print("\n" + "\033[4m" + "HUMIDITY" + reseteffect + " (" + currenttime +")")
             print(f"outside: temp: {round(outsidedict['temp'], 1)} °C, relhum: {round(outsidedict['hum'], 1)} %, abshum: {outsidedict['abshum']} g/m3")
 
@@ -267,11 +256,9 @@ def create_output(sensorlist, settingsdict, summer = False):
             print(singlestr)
         if morehumidoutside == True:
             notestr = "(méi fiicht resp. Differenz < 10%)" if displaylanguage == "lu" else "(more humid or difference < 10%)"
-            #print(fg(208) + " * " + fg.rs + notestr)  # todo
             print(orangecolour + " * " + reseteffect + notestr)
 
         if summer == True:
-            #print("\n" + ef.u + "SUMMER" + ef.rs+ " (" + currenttime +")")  # underlined  # TODO
             print("\n" + "\033[4m" + "SUMMER" + reseteffect + " (" + currenttime +")")  # underlined
             for singlesummerstr in summeroutputstrings:
                 print(singlesummerstr)
